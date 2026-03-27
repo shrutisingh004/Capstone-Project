@@ -204,6 +204,6 @@ Distances between cities are computed using the **Haversine formula** (great-cir
 
 ---
 
-## Acknowledgements
+## Acknowledgement
 
 Developed as part of a final-year capstone project. Dataset, problem framing, and business context are based on real FMCG distribution challenges in the Indian market.
