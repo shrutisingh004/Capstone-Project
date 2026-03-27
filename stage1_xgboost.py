@@ -15,7 +15,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import config
 
 
-# ── Public entry point ─────────────────────────────────────────────────────
+# Public entry point
 
 def run(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -41,11 +41,11 @@ def run(df: pd.DataFrame) -> pd.DataFrame:
     matrix = _build_matrix(predictions)
 
     _print_metrics(metrics)
-    print(f"\n✅ Stage 1 complete — matrix shape: {matrix.shape}")
+    print(f"\n Stage 1 complete — matrix shape: {matrix.shape}")
     return matrix
 
 
-# ── Internal helpers ───────────────────────────────────────────────────────
+# Internal helpers
 
 def _preprocess(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
@@ -157,7 +157,7 @@ def _print_metrics(metrics: dict):
     print(pd.DataFrame(rows).to_string(index=False))
 
 
-# ── Checkpoint helper (called by pipeline.py) ─────────────────────────────
+# Checkpoint helper (called by pipeline.py)
 
 def save_checkpoint(matrix: pd.DataFrame, path: str):
     import os
