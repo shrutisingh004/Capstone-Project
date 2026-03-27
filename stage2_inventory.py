@@ -14,7 +14,7 @@ import numpy as np
 import config
 
 
-# ── Public entry point ─────────────────────────────────────────────────────
+# Public entry point
 
 def run(matrix: pd.DataFrame) -> pd.DataFrame:
     """
@@ -41,15 +41,15 @@ def run(matrix: pd.DataFrame) -> pd.DataFrame:
     transfers = _compute_transfers(matrix, cities)
 
     if transfers.empty:
-        print("⚠️  No transfers needed — all cities balanced.")
+        print("No transfers needed — all cities balanced.")
         return transfers
 
     _print_summary(transfers)
-    print(f"\n✅ Stage 2 complete — {len(transfers)} transfer records")
+    print(f"\n Stage 2 complete — {len(transfers)} transfer records")
     return transfers
 
 
-# ── Internal helpers ───────────────────────────────────────────────────────
+# Internal helpers
 
 def _detect_cities(matrix: pd.DataFrame) -> list:
     """Return city columns present in matrix (intersection with config.CITIES)."""
@@ -65,8 +65,8 @@ def _compute_transfers(matrix: pd.DataFrame, cities: list) -> pd.DataFrame:
     all_transfers = []
 
     for _, row in matrix.iterrows():
-        product_id  = row["Product_ID"]
-        month       = row["Month"]
+        product_id = row["Product_ID"]
+        month = row["Month"]
         city_demands = {city: int(row[city]) for city in cities if city in row}
 
         transfers = _calculate_transfers(product_id, month, city_demands)
@@ -135,7 +135,7 @@ def _print_summary(df: pd.DataFrame):
         print(f"      {city}: {total:,} pieces")
 
 
-# ── Checkpoint helper ──────────────────────────────────────────────────────
+# Checkpoint helper
 
 def save_checkpoint(transfers: pd.DataFrame, path: str):
     import os
@@ -157,4 +157,4 @@ def save_checkpoint(transfers: pd.DataFrame, path: str):
         )
         route_summary.to_excel(writer, sheet_name="Route_Summary", index=False)
 
-    print(f"   💾 Checkpoint saved → {path}")
+    print(f"Checkpoint saved → {path}")
