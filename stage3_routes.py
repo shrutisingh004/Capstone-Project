@@ -12,7 +12,7 @@ from typing import List, Dict, Tuple
 import config
 
 
-# ── Public entry point ─────────────────────────────────────────────────────
+# Public entry point
 
 def run(transfers: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
     """
@@ -39,17 +39,17 @@ def run(transfers: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
     report       = optimizer.generate_report(routes_df)
 
     _print_report(report)
-    print(f"\n✅ Stage 3 complete — {len(routes_df)} routes generated")
+    print(f"\n Stage 3 complete — {len(routes_df)} routes generated")
     return routes_df, report
 
 
-# ── FMCGRouteOptimizer class ───────────────────────────────────────────────
+# FMCGRouteOptimizer class
 
 class FMCGRouteOptimizer:
     def __init__(self, cfg: Dict):
         self.config = cfg
 
-    # ── Distance calculation ───────────────────────────────────────────────
+    # Distance calculation
 
     def calculate_distances(self, city_coords: Dict) -> Dict:
         distances = {}
@@ -69,7 +69,7 @@ class FMCGRouteOptimizer:
         a = np.sin(dlat / 2) ** 2 + np.cos(np.radians(lat1)) * np.cos(np.radians(lat2)) * np.sin(dlon / 2) ** 2
         return R * 2 * np.arcsin(np.sqrt(a))
 
-    # ── Consolidation ─────────────────────────────────────────────────────
+    # Consolidation
 
     def consolidate_shipments(self, df: pd.DataFrame, period: str = "monthly") -> pd.DataFrame:
         df = df.copy()
@@ -93,7 +93,7 @@ class FMCGRouteOptimizer:
               f"({len(df) / max(len(consolidated), 1):.1f}x reduction)")
         return consolidated
 
-    # ── Route optimisation ─────────────────────────────────────────────────
+    # Route optimisation
 
     def optimize_routes(self, shipments: pd.DataFrame, distances: Dict) -> pd.DataFrame:
         all_routes = []
@@ -118,7 +118,7 @@ class FMCGRouteOptimizer:
 
         return pd.DataFrame(all_routes)
 
-    # ── TSP heuristics ─────────────────────────────────────────────────────
+    # TSP heuristics
 
     def _nearest_neighbor_tsp(self, source: str, destinations: List[Dict], distances: Dict) -> List[List[Dict]]:
         routes    = []
@@ -194,7 +194,7 @@ class FMCGRouteOptimizer:
                     break
         return best
 
-    # ── Distance / cost helpers ────────────────────────────────────────────
+    # Distance / cost helpers
 
     def _route_distance(self, route: List[Dict], source: str, distances: Dict) -> float:
         if not route:
@@ -212,35 +212,35 @@ class FMCGRouteOptimizer:
 
     def _format_route(self, route: List[Dict], source: str, period: int,
                       route_num: int, algorithm: str, distances: Dict) -> Dict:
-        load      = sum(d["quantity"] for d in route)
-        distance  = self._route_distance(route, source, distances)
-        travel_h  = distance / self.config["speed"]
-        total_h   = travel_h + len(route) * self.config["loading_time"]
-        var_cost  = distance * self.config["cost_per_km"]
+        load = sum(d["quantity"] for d in route)
+        distance = self._route_distance(route, source, distances)
+        travel_h = distance / self.config["speed"]
+        total_h = travel_h + len(route) * self.config["loading_time"]
+        var_cost = distance * self.config["cost_per_km"]
         total_cost = var_cost + self.config["fixed_cost"]
 
         return {
-            "Period":           period,
-            "Source":           source,
-            "Route_Number":     route_num,
-            "Algorithm":        algorithm,
-            "Stops":            " → ".join([source] + [d["city"] for d in route] + [source]),
-            "Destinations":     ", ".join(d["city"] for d in route),
-            "Num_Stops":        len(route),
-            "Total_Load":       load,
-            "Distance_KM":      round(distance, 1),
-            "Travel_Time_H":    round(travel_h, 1),
-            "Total_Time_H":     round(total_h, 1),
-            "Variable_Cost":    round(var_cost, 2),
-            "Fixed_Cost":       self.config["fixed_cost"],
-            "Total_Cost":       round(total_cost, 2),
+            "Period": period,
+            "Source": source,
+            "Route_Number": route_num,
+            "Algorithm": algorithm,
+            "Stops": " → ".join([source] + [d["city"] for d in route] + [source]),
+            "Destinations": ", ".join(d["city"] for d in route),
+            "Num_Stops": len(route),
+            "Total_Load": load,
+            "Distance_KM": round(distance, 1),
+            "Travel_Time_H": round(travel_h, 1),
+            "Total_Time_H": round(total_h, 1),
+            "Variable_Cost": round(var_cost, 2),
+            "Fixed_Cost": self.config["fixed_cost"],
+            "Total_Cost": round(total_cost, 2),
             "Capacity_Util_%":  round(load / self.config["capacity"] * 100, 1),
-            "Feasible":         total_h <= self.config["max_hours"],
-            "Cost_Per_KM":      round(total_cost / distance, 2) if distance > 0 else 0,
-            "Cost_Per_Piece":   round(total_cost / load, 2)     if load > 0     else 0,
+            "Feasible": total_h <= self.config["max_hours"],
+            "Cost_Per_KM": round(total_cost / distance, 2) if distance > 0 else 0,
+            "Cost_Per_Piece": round(total_cost / load, 2) if load > 0 else 0,
         }
 
-    # ── Reporting ──────────────────────────────────────────────────────────
+    # Reporting
 
     def generate_report(self, routes_df: pd.DataFrame) -> Dict:
         td = routes_df["Distance_KM"].sum()
@@ -248,54 +248,54 @@ class FMCGRouteOptimizer:
         tl = routes_df["Total_Load"].sum()
 
         report = {
-            "total_routes":        len(routes_df),
-            "total_distance_km":   td,
-            "total_cost":          tc,
-            "total_load":          tl,
-            "avg_capacity_util":   routes_df["Capacity_Util_%"].mean(),
-            "cost_per_km":         tc / td if td > 0 else 0,
-            "cost_per_piece":      tc / tl if tl > 0 else 0,
-            "feasible_routes":     (routes_df["Feasible"] == True).sum(),
-            "infeasible_routes":   (routes_df["Feasible"] == False).sum(),
-            "multi_stop_routes":   (routes_df["Num_Stops"] > 1).sum(),
-            "recommendations":     [],
+            "total_routes": len(routes_df),
+            "total_distance_km": td,
+            "total_cost": tc,
+            "total_load": tl,
+            "avg_capacity_util": routes_df["Capacity_Util_%"].mean(),
+            "cost_per_km": tc / td if td > 0 else 0,
+            "cost_per_piece": tc / tl if tl > 0 else 0,
+            "feasible_routes": (routes_df["Feasible"] == True).sum(),
+            "infeasible_routes": (routes_df["Feasible"] == False).sum(),
+            "multi_stop_routes": (routes_df["Num_Stops"] > 1).sum(),
+            "recommendations": [],
         }
 
         # Recommendations
         if report["avg_capacity_util"] < 60:
             under = (routes_df["Capacity_Util_%"] < 50).sum()
             report["recommendations"].append({
-                "priority":       "HIGH",
-                "category":       "Capacity",
-                "issue":          f"Low avg capacity utilisation ({report['avg_capacity_util']:.1f}%)",
+                "priority": "HIGH",
+                "category": "Capacity",
+                "issue": f"Low avg capacity utilisation ({report['avg_capacity_util']:.1f}%)",
                 "recommendation": f"Use smaller vehicles or consolidate further. {under} routes under 50%.",
-                "impact":         f"Potential savings: ₹{under * self.config['fixed_cost'] * 0.3:,.0f}",
+                "impact": f"Potential savings: ₹{under * self.config['fixed_cost'] * 0.3:,.0f}",
             })
 
         if report["infeasible_routes"] > 0:
             report["recommendations"].append({
-                "priority":       "MEDIUM",
-                "category":       "Operations",
-                "issue":          f"{report['infeasible_routes']} routes exceed time limit",
+                "priority": "MEDIUM",
+                "category": "Operations",
+                "issue": f"{report['infeasible_routes']} routes exceed time limit",
                 "recommendation": "Implement multi-day scheduling or relay drivers",
-                "impact":         "Improved compliance & driver satisfaction",
+                "impact": "Improved compliance & driver satisfaction",
             })
 
         q75 = routes_df["Cost_Per_Piece"].quantile(0.75)
         high_cost_n = (routes_df["Cost_Per_Piece"] > q75).sum()
         if high_cost_n > 0:
             report["recommendations"].append({
-                "priority":       "MEDIUM",
-                "category":       "Cost",
-                "issue":          f"{high_cost_n} routes have high cost-per-piece",
+                "priority": "MEDIUM",
+                "category": "Cost",
+                "issue": f"{high_cost_n} routes have high cost-per-piece",
                 "recommendation": "Consider 3PL for these lanes",
-                "impact":         "Potential 40–60% cost reduction on these routes",
+                "impact": "Potential 40–60% cost reduction on these routes",
             })
 
         return report
 
 
-# ── Checkpoint helper ──────────────────────────────────────────────────────
+# Checkpoint helper
 
 def save_checkpoint(routes_df: pd.DataFrame, report: dict, path: str):
     import os
@@ -330,19 +330,19 @@ def save_checkpoint(routes_df: pd.DataFrame, report: dict, path: str):
                 writer, sheet_name="Recommendations", index=False
             )
 
-    print(f"   💾 Final output saved → {path}")
+    print(f" Final output saved → {path}")
 
 
 def _print_report(report: dict):
-    print(f"\n   Total routes         : {report['total_routes']}")
-    print(f"   Total distance       : {report['total_distance_km']:,.0f} km")
-    print(f"   Total cost           : ₹{report['total_cost']:,.2f}")
-    print(f"   Cost per piece       : ₹{report['cost_per_piece']:.2f}")
-    print(f"   Avg capacity util    : {report['avg_capacity_util']:.1f}%")
-    print(f"   Feasible routes      : {report['feasible_routes']} / {report['total_routes']}")
+    print(f"\n Total routes: {report['total_routes']}")
+    print(f"Total distance: {report['total_distance_km']:,.0f} km")
+    print(f"Total cost: ₹{report['total_cost']:,.2f}")
+    print(f"Cost per piece: ₹{report['cost_per_piece']:.2f}")
+    print(f"Avg capacity util: {report['avg_capacity_util']:.1f}%")
+    print(f"Feasible routes: {report['feasible_routes']} / {report['total_routes']}")
 
     if report["recommendations"]:
-        print("\n   💡 Recommendations:")
+        print("\n Recommendations:")
         for r in report["recommendations"]:
-            print(f"      [{r['priority']}] {r['category']} — {r['issue']}")
-            print(f"         → {r['recommendation']}")
+            print(f"[{r['priority']}] {r['category']} — {r['issue']}")
+            print(f"→ {r['recommendation']}")
