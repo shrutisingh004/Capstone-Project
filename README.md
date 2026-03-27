@@ -152,14 +152,11 @@ The `--from` flags are useful when iterating: retraining XGBoost on the full dat
 
 ## Key Results
 
-| Metric | Value |
-|---|---|
-| Model Accuracy (Test MAPE) | < 15% |
-| Total Data Processed | 29,220+ records |
-| Shipment Requests Reduced | 180 → 36 |
-| Total Routes Generated | 12 optimized routes |
-| Vehicle Utilization | Significantly improved |
-| Logistics Cost | Reduced through route optimization |
+- Reduced shipment requests from **180 → 36** through consolidation  
+- Generated **12 optimized multi-stop delivery routes**  
+- Improved vehicle utilization and reduced empty runs  
+- Achieved **<15% MAPE** in demand forecasting  
+- Reduced transportation cost and fuel consumption  
 
 
 ---
