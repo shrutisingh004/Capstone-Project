@@ -42,7 +42,7 @@ import stage2_inventory as s2
 import stage3_routes    as s3
 
 
-# ── Input CSV resolution ───────────────────────────────────────────────────
+# Input CSV resolution 
 
 def resolve_input_csv(cli_path) -> str:
     """
@@ -54,20 +54,20 @@ def resolve_input_csv(cli_path) -> str:
     Returns the resolved absolute path, or exits with a helpful message.
     """
 
-    # ── 1. Explicit CLI path ──────────────────────────────────────────────
+    # 1. Explicit CLI path
     if cli_path:
         path = os.path.abspath(cli_path)
         if not os.path.exists(path):
             sys.exit(
-                f"\n❌ File not found: {path}\n"
+                f"\n File not found: {path}\n"
                 f"   Double-check the path and try again.\n"
             )
         if not path.lower().endswith(".csv"):
-            sys.exit(f"\n❌ Expected a .csv file, got: {path}\n")
+            sys.exit(f"\n Expected a .csv file, got: {path}\n")
         print(f"   📄 Input CSV (--input flag)   : {path}")
         return path
 
-    # ── 2. Drop-zone folder ───────────────────────────────────────────────
+    # 2. Drop-zone folder
     inputs_dir = config.INPUTS_DIR
     os.makedirs(inputs_dir, exist_ok=True)
 
@@ -75,34 +75,34 @@ def resolve_input_csv(cli_path) -> str:
 
     if len(csv_files) == 1:
         path = os.path.abspath(csv_files[0])
-        print(f"   📄 Input CSV (inputs/ folder) : {path}")
+        print(f" Input CSV (inputs/ folder) : {path}")
         return path
 
     if len(csv_files) > 1:
         names = "\n      ".join(os.path.basename(f) for f in csv_files)
         sys.exit(
-            f"\n❌ Multiple CSV files found in inputs/ folder:\n"
+            f"\n Multiple CSV files found in inputs/ folder:\n"
             f"      {names}\n\n"
             f"   Please specify which one:\n"
             f"      python pipeline.py --input inputs/<filename>.csv\n"
         )
 
-    # ── 3. Hardcoded default ──────────────────────────────────────────────
+    # 3. Hardcoded default
     path = os.path.abspath(config.INPUT_CSV_DEFAULT)
     if not os.path.exists(path):
         sys.exit(
-            f"\n❌ No input CSV found. Tried:\n"
+            f"\n No input CSV found. Tried:\n"
             f"   • --input flag        : not provided\n"
             f"   • inputs/ folder      : empty  ({inputs_dir})\n"
             f"   • config default path : {path}  (does not exist)\n\n"
             f"   Quickest fix:\n"
             f"      python pipeline.py --input your_sales_data.csv\n"
         )
-    print(f"   📄 Input CSV (config default) : {path}")
+    print(f" Input CSV (config default) : {path}")
     return path
 
 
-# ── Helpers ────────────────────────────────────────────────────────────────
+# Helpers
 
 def _ensure_output_dir():
     os.makedirs(config.OUTPUT_DIR, exist_ok=True)
@@ -119,7 +119,7 @@ def _elapsed(start: float) -> str:
     return f"{s:.1f}s" if s < 60 else f"{s / 60:.1f}min"
 
 
-# ── Stage runners ──────────────────────────────────────────────────────────
+# Stage runners
 
 def run_stage1(csv_path: str, save_checkpoint: bool) -> pd.DataFrame:
     t   = time.time()
@@ -154,7 +154,7 @@ def run_stage3(transfers: pd.DataFrame) -> pd.DataFrame:
     return routes_df
 
 
-# ── Load from checkpoint ───────────────────────────────────────────────────
+# Load from checkpoint
 
 def _load_xgboost_checkpoint() -> pd.DataFrame:
     path = config.CHECKPOINT_XGBOOST
@@ -176,11 +176,11 @@ def _load_inventory_checkpoint() -> pd.DataFrame:
             f"   Run from stage2 or the full pipeline first:\n"
             f"      python pipeline.py --input your_data.csv\n"
         )
-    print(f"   📂 Loading inventory checkpoint: {path}")
+    print(f"Loading inventory checkpoint: {path}")
     return pd.read_excel(path, sheet_name="Detailed_Transfers")
 
 
-# ── Main ───────────────────────────────────────────────────────────────────
+# Main
 
 def main():
     parser = argparse.ArgumentParser(
@@ -219,7 +219,7 @@ def main():
     print(f"   Checkpoints  : {'enabled' if save_checkpoints else 'disabled'}")
     print(f"   Output       : {config.FINAL_OUTPUT}")
 
-    # ── Stage 1 ──────────────────────────────────────────────────────────
+    # Stage 1
     if start == "stage1":
         csv_path = resolve_input_csv(args.input)
         matrix   = run_stage1(csv_path, save_checkpoints)
@@ -227,16 +227,16 @@ def main():
         # CSV not needed when resuming from stage 2 or 3
         matrix = _load_xgboost_checkpoint()
 
-    # ── Stage 2 ──────────────────────────────────────────────────────────
+    # Stage 2
     if start in ("stage1", "stage2"):
         transfers = run_stage2(matrix, save_checkpoints)
     else:
         transfers = _load_inventory_checkpoint()
 
-    # ── Stage 3 ──────────────────────────────────────────────────────────
+    # Stage 3
     routes_df = run_stage3(transfers)
 
-    # ── Done ──────────────────────────────────────────────────────────────
+    # Done
     _banner("PIPELINE COMPLETE")
     print(f"   Total time   : {_elapsed(total_start)}")
     print(f"   Final output : {config.FINAL_OUTPUT}")
