@@ -1,4 +1,4 @@
-# Capstone-Project
+# AI-Driven Supply Chain Optimization Framework
 UISCO (Unified Intelligent Supply Chain Optimization) for FMCG
 
 ## Overview
